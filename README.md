@@ -1,5 +1,7 @@
 Survival Analysis in R: GBSG2 Dataset
 
+Note: The analysis script is commented in Italian.
+
 Overview
 
 This project presents a survival analysis of the German Breast Cancer Study Group 2 (GBSG2) dataset using R.
