@@ -1,239 +1,264 @@
 Survival Analysis in R: GBSG2 Dataset
 
-Note: The analysis script is commented in Italian.
+A survival analysis project using R to investigate prognostic factors in breast cancer patients, with a particular focus on the functional relationship between the number of positive lymph nodes and the hazard of the event.
+
+The project combines exploratory data analysis, Kaplan–Meier estimation, Cox proportional hazards regression, nonlinear modeling with natural splines, model diagnostics, and sensitivity analysis.
+
+Note: The R script is commented in Italian.
 
 Overview
 
-This project presents a survival analysis of the German Breast Cancer Study Group 2 (GBSG2) dataset using R.
+Survival analysis is used to study the time until an event occurs while accounting for observations whose event time is not fully observed.
 
-The main objective is to investigate the relationship between clinical and biological characteristics and patient survival, with particular attention to the number of involved lymph nodes.
+This project applies survival analysis techniques to the German Breast Cancer Study Group 2 (GBSG2) dataset. The main objective is to investigate the association between patient characteristics and survival outcomes and to assess how the specification of continuous predictors affects Cox model estimates.
 
-The analysis combines exploratory data analysis, Kaplan–Meier estimation, Cox proportional hazards regression, functional form assessment, model diagnostics, and sensitivity analysis.
+Particular attention is given to pnodes, the number of positive lymph nodes, whose relationship with the hazard may not be adequately represented by a simple linear term.
+
+The project emphasizes statistical interpretation, model diagnostics, and the distinction between goodness of fit and predictive performance.
 
 Project Objectives
 
-The main objectives of this project are:
+The main objectives are to:
 
-* Explore the dataset and describe the main variables.
-* Investigate the relationship between prognostic factors and survival.
-* Estimate survival probabilities using Kaplan–Meier curves.
-* Fit Cox proportional hazards models and assess their assumptions.
-* Compare alternative functional forms for continuous covariates.
-* Evaluate the potential benefits of logarithmic transformations and spline functions.
-* Investigate influential observations and assess the stability of the results.
-* Compare candidate models using statistical criteria and concordance indices.
+* Explore the dataset and describe its main clinical and biological characteristics.
+* Estimate survival functions using Kaplan–Meier methods.
+* Compare survival patterns across selected patient groups.
+* Fit univariable and multivariable Cox proportional hazards models.
+* Assess the proportional hazards assumption.
+* Investigate alternative functional forms for the number of positive lymph nodes.
+* Compare linear, logarithmic, and natural spline specifications.
+* Visualize hazard ratios relative to a clinically interpretable reference value.
+* Examine influential observations using DFBETA diagnostics.
+* Assess the sensitivity of model estimates to the temporary exclusion of influential observations.
+* Compare candidate models using the Akaike Information Criterion (AIC), likelihood ratio tests, and concordance indices.
 
 Dataset
 
-The analysis uses the GBSG2 dataset available through the TH.data R package.
+The analysis uses the GBSG2 dataset provided by the R package TH.data.
 
-The dataset contains information on 686 patients with breast cancer, including survival time, censoring status, treatment, tumor characteristics, hormonal receptor measurements, age, and the number of involved lymph nodes.
+The dataset contains information on 686 breast cancer patients, including follow-up time, event status, treatment, tumor characteristics, hormonal receptor measurements, age, and the number of positive lymph nodes.
 
-The main variables considered include:
+The main variables include:
 
 * time: observed follow-up time.
-* cens: event indicator used to identify whether the event was observed.
-* horTh: hormonal therapy indicator.
-* age: patient’s age.
+* cens: event indicator.
+* horTh: hormonal therapy status.
+* age: patient age.
 * menostat: menopausal status.
 * tumsize: tumor size.
 * tgrade: tumor grade.
-* pnodes: number of involved lymph nodes.
+* pnodes: number of positive lymph nodes.
 * progrec: progesterone receptor level.
 * estrec: estrogen receptor level.
 
-The observed follow-up time is converted from days to months for interpretability.
+The follow-up time is converted from days to months to make the results easier to interpret.
 
-The dataset contains 686 observations and no missing values in the variables examined.
+The dataset contains 686 observations, with 299 observed events. No missing values were identified in the variables examined for this analysis.
 
 Methodology
 
 1. Data Preparation and Exploratory Data Analysis
 
-The first stage involves loading the dataset, checking its structure, examining missing values, and preparing the survival variables.
+The analysis begins by loading the dataset, examining its structure, checking for missing values, and preparing the variables required for survival modeling.
 
-Descriptive statistics and graphical summaries are used to investigate the distributions of the main covariates.
+Descriptive statistics and graphical summaries are used to explore the distributions of the main covariates.
 
-Particular attention is given to the distribution of the number of involved lymph nodes, which is positively skewed.
+Particular attention is given to the distribution of pnodes, which is positively skewed. This feature motivates the investigation of transformations and flexible functional forms.
 
-The relationship between progesterone and estrogen receptor levels is also examined using Spearman’s rank correlation.
+The association between progesterone and estrogen receptor levels is also explored using Spearman’s rank correlation.
+
+Exploratory analyses provide context for the subsequent models but do not establish causal relationships.
 
 2. Kaplan–Meier Survival Analysis
 
-Kaplan–Meier estimators are used to estimate the survival function.
+Kaplan–Meier estimators are used to estimate the survival function for the overall sample and for selected clinical groups.
 
-Survival curves are examined for the overall sample and across selected clinical groups, including hormonal therapy, tumor grade, and categories of involved lymph nodes.
+Survival curves are examined according to:
 
-Log-rank tests are used to investigate differences between survival curves.
+* Hormonal therapy status.
+* Tumor grade.
+* Categories of positive lymph nodes.
 
-These analyses provide an initial, unadjusted assessment of the relationship between clinical characteristics and survival.
+Log-rank tests are used to investigate differences between selected survival curves.
 
-3. Cox Proportional Hazards Models
+These comparisons provide an initial, unadjusted assessment of survival patterns. They do not account for potential confounding by other patient characteristics.
 
-Cox proportional hazards regression is used to investigate associations between patient characteristics and the hazard of the event.
+3. Cox Proportional Hazards Regression
 
-The analysis includes univariable models and multivariable models that account for multiple covariates simultaneously.
+Cox proportional hazards models are fitted to investigate the association between patient characteristics and the hazard of the event.
 
-Hazard ratios and their confidence intervals are used to quantify the estimated associations.
+Both univariable and multivariable specifications are considered. The multivariable models account for multiple covariates simultaneously and use transformations for selected variables where specified in the analysis.
+
+Hazard ratios and confidence intervals are used to quantify the estimated associations.
 
 The proportional hazards assumption is assessed using Schoenfeld residuals and the cox.zph() function.
 
-Where appropriate, stratified Cox models are considered to accommodate covariates for which a common baseline hazard may be unsuitable.
+Stratified Cox models are also considered to allow different baseline hazard functions across selected categorical variables.
+
+A nonsignificant proportional hazards test is not proof that the assumption holds exactly; it indicates only that the diagnostic test did not detect statistically significant evidence against it.
 
 4. Functional Form Assessment
 
-The functional relationship between continuous covariates and the log hazard is an important aspect of Cox model specification.
+A central part of the project is the investigation of how pnodes should enter the Cox model.
 
-Particular attention is given to pnodes, the number of involved lymph nodes.
+Three functional specifications are compared:
 
-Alternative specifications are investigated, including:
+* Linear: the log hazard changes linearly with the number of positive lymph nodes.
+* Logarithmic: the predictor is transformed using log1p(pnodes).
+* Natural spline: a flexible function allows the association to depart from a simple linear relationship.
 
-* A linear functional form.
-* A logarithmic transformation using log1p().
-* Natural spline functions.
+Martingale residuals are examined as an exploratory diagnostic for possible departures from linearity.
 
-Martingale residuals are used as an exploratory tool to investigate potential departures from linearity.
+Candidate models are compared using the AIC. A likelihood ratio test is used to compare the nested linear and spline specifications.
 
-The candidate models are compared using the Akaike Information Criterion (AIC), while likelihood ratio tests are used when the models being compared are nested.
+These criteria answer different questions. The likelihood ratio test evaluates whether the additional flexibility of the specified spline improves model fit relative to the linear specification, whereas the AIC balances fit against model complexity.
 
-This approach helps evaluate whether a more flexible functional form provides a meaningful improvement over a simpler specification.
+Consequently, a significant likelihood ratio test does not necessarily imply that the spline has the lowest AIC among all candidate models.
 
 5. Hazard Ratio Curves
 
-Hazard ratio curves are constructed to examine how the estimated hazard changes with the number of involved lymph nodes.
+Hazard ratio curves are used to visualize the estimated association between pnodes and the hazard.
 
-The hazard ratios are expressed relative to a reference value of three involved lymph nodes.
+The curves are expressed relative to a reference value of three positive lymph nodes. This makes it possible to interpret the estimated hazard at other values relative to the same reference.
 
-Pointwise confidence intervals are calculated to represent uncertainty in the estimated hazard ratios at individual covariate values.
+The logarithmic and spline specifications are compared to illustrate how the choice of functional form affects the estimated relationship.
 
-These curves help illustrate potential nonlinear associations that may not be adequately represented by a single constant hazard ratio per additional lymph node.
+Pointwise 95% confidence intervals are used to represent uncertainty at individual values of pnodes. They are not simultaneous confidence bands for the entire curve.
+
+Estimates near the extremes of the predictor distribution should be interpreted cautiously because relatively few observations may be available in those regions.
 
 6. Model Diagnostics and Influential Observations
 
-Model diagnostics are used to investigate the stability and adequacy of the fitted Cox models.
+Model diagnostics are used to investigate the adequacy and stability of the fitted models.
 
 The analysis includes:
 
-* Assessment of the proportional hazards assumption.
-* Examination of influential observations using DFBETA diagnostics.
-* A sensitivity analysis in which the most influential observations are temporarily excluded.
-* Comparison of model estimates before and after the sensitivity analysis.
+* Assessment of the proportional hazards assumption using Schoenfeld residuals.
+* Examination of influential observations using DFBETA residuals.
+* Identification of observations with the largest absolute DFBETA values.
+* A sensitivity analysis that temporarily excludes the five most influential observations.
+* Comparison of model summaries and concordance indices before and after this exclusion.
 
-The purpose is to assess whether a small number of observations substantially affect the estimated associations.
+The sensitivity analysis is exploratory. An observation can be influential without being erroneous, and influence alone is not sufficient justification for removing a patient from the primary analysis.
 
-The primary analysis retains the original observations. The sensitivity analysis is exploratory and does not, by itself, justify excluding observations from the main model.
+The original observations are retained in the primary model.
 
 Main Findings
 
 Survival Patterns
 
-Kaplan–Meier analyses indicate differences in survival across selected clinical groups.
+The Kaplan–Meier analyses describe differences in estimated survival across selected clinical groups, including categories defined by the number of positive lymph nodes.
 
-In particular, survival differs across categories defined by the number of involved lymph nodes, suggesting that this variable is an important prognostic factor in the dataset.
+These comparisons are unadjusted and should be interpreted as descriptive evidence of differences in survival patterns rather than as estimates of independent or causal effects.
 
-These unadjusted comparisons describe survival patterns but do not account for potential confounding by other covariates.
+Association Between Positive Lymph Nodes and Hazard
 
-Number of Involved Lymph Nodes
+In the univariable Cox model with a linear term for pnodes, the estimated hazard ratio is approximately 1.06 per additional positive lymph node.
 
-The number of involved lymph nodes shows a strong association with the hazard of the event.
+Under the linear specification and proportional hazards assumption, this corresponds to an estimated increase of approximately 6% in the hazard per additional positive lymph node.
 
-In the univariable Cox model with a linear term for pnodes, the estimated hazard ratio is approximately 1.06 per additional involved lymph node.
+This interpretation depends on the assumption that the log hazard changes linearly with pnodes. If the true relationship is nonlinear, a single hazard ratio per additional lymph node may not adequately describe the association.
 
-This corresponds to an estimated increase of approximately 6% in the hazard per additional lymph node, under the model’s linear functional form and proportional hazards assumptions.
+The estimate represents an association, not a causal effect.
 
-The estimate is an association, not a causal effect, and its interpretation depends on the adequacy of the model specification.
+Comparison of Functional Forms
 
-Functional Form Comparison
+The comparison of candidate specifications produces the following approximate results:
 
-The analysis compares linear, logarithmic, and spline-based specifications for the number of involved lymph nodes.
+* The logarithmic model has an AIC of 2597.77.
+* The specified spline model has an AIC of 2600.18.
+* The likelihood ratio test comparing the linear and spline models gives a p-value of approximately 0.0001.
+* The in-sample concordance index is approximately 0.682 for the logarithmic model and 0.684 for the spline model.
 
-The likelihood ratio test comparing the linear model with the specified spline model provides evidence that the spline offers a better fit than the linear specification.
+The likelihood ratio test provides evidence that the specified spline improves fit relative to the linear specification.
 
-However, the logarithmic model has a slightly lower AIC than the particular spline model initially considered.
+However, the logarithmic model has a slightly lower AIC than the spline model considered here. The spline model has a marginally higher in-sample concordance index, but the difference is approximately 0.002.
 
-This illustrates the importance of distinguishing between comparisons of nested models using likelihood ratio tests and comparisons of candidate models using information criteria.
+These results are not contradictory because the criteria measure different aspects of model performance.
 
-The findings do not establish that one functional form is universally preferable. Additional sensitivity analyses using alternative spline specifications would help assess the robustness of this conclusion.
+The findings do not establish that one functional form is universally preferable. The choice should also consider model complexity, diagnostic results, interpretability, and stability.
 
 Proportional Hazards Assumption
 
-The proportional hazards assumption is assessed using Schoenfeld residuals.
+The proportional hazards assumption is assessed using Schoenfeld residuals and cox.zph().
 
-For the stratified spline model examined, the global test does not provide statistically significant evidence against the proportional hazards assumption.
+For the stratified spline model examined in the analysis, the global test does not provide statistically significant evidence against the proportional hazards assumption.
 
-A nonsignificant test does not prove that the assumption is satisfied, but it indicates that the diagnostic test did not detect a clear violation.
+This result should not be interpreted as proof that proportional hazards holds exactly. It indicates that the test did not detect a statistically significant violation.
 
-Sensitivity Analysis
+Sensitivity to Influential Observations
 
-The sensitivity analysis examines the effect of temporarily excluding the five most influential observations identified by the diagnostic procedure.
+The DFBETA diagnostics identify observations that have relatively large influence on the estimated model coefficients.
 
-The estimated concordance index changes only modestly, and the hazard ratio curves remain broadly similar across much of the central range of the number of involved lymph nodes.
+The five most influential observations are temporarily excluded in a sensitivity analysis, and the model is refitted using the remaining observations.
 
-Greater differences appear in the upper tail, where relatively few observations are available.
+The analysis script reports an approximate change in the concordance index from 0.684 in the original model to 0.687 in the sensitivity model.
 
-This suggests that the central part of the estimated relationship is reasonably stable under this particular sensitivity analysis, while estimates at extreme covariate values should be interpreted more cautiously.
+This relatively small change suggests that the concordance index is not substantially altered by this particular exclusion. Nevertheless, a similar concordance index does not guarantee that all regression coefficients or hazard ratio curves remain unchanged.
 
-Model Comparison and Interpretation
+Differences may be more pronounced in the upper tail of pnodes, where observations are less numerous and flexible functional forms can be less precisely estimated.
 
-The logarithmic and spline-based models have similar concordance indices.
+The sensitivity analysis does not justify excluding these patients from the primary analysis. It illustrates why influential observations and sparse regions of the predictor distribution deserve careful examination.
 
-The difference between their in-sample C-indices is approximately 0.002, with the spline model showing a slightly higher value.
+Interpretation of Predictive Performance
 
-Such a small difference should not be interpreted as evidence that the spline model has superior predictive performance.
+The logarithmic and spline models have similar in-sample concordance indices.
 
-Because the concordance indices are calculated on the same observations used to estimate the models, they may be optimistic. Bootstrap validation or cross-validation would be useful for a more reliable assessment of predictive discrimination.
+The difference of approximately 0.002 is too small to support a meaningful claim that the spline model has superior predictive performance.
 
-Overall, the results support an association between the number of involved lymph nodes and the hazard of the event. The analysis also suggests that the functional form used to represent this relationship deserves careful consideration.
+Moreover, these concordance indices are calculated on the same observations used to estimate the models. They may therefore be optimistic estimates of performance on new patients.
 
-Model selection should account for fit, complexity, diagnostic results, interpretability, and the stability of the estimates rather than relying on a single metric.
+Bootstrap validation or cross-validation would be useful to assess predictive discrimination more reliably.
 
 Methodological Limitations
 
-Several methodological limitations should be considered when interpreting the results.
+Several limitations should be considered when interpreting the findings.
 
 Spline Specification
 
-The initial spline model uses manually selected knots at 3, 7, and 15 involved lymph nodes.
+The spline model uses manually specified knots at 3, 7, and 15 positive lymph nodes, with boundary knots at 1 and 51.
 
-The sensitivity of the results to alternative knot locations and spline degrees of freedom has not yet been fully assessed.
+The sensitivity of the findings to alternative knot locations and degrees of freedom has not been fully assessed. Further work could compare alternative spline specifications and knot placements based on the observed distribution of pnodes.
 
-Additional analyses could compare natural splines with different degrees of freedom and alternative knot placements, including placements based on the observed covariate distribution.
+In-Sample Concordance
 
-In-Sample Concordance Index
+The reported concordance indices are calculated on the data used to fit the models.
 
-The reported concordance indices are calculated using the same data used to fit the models.
+They should not be interpreted as validated estimates of predictive performance on unseen observations. Bootstrap validation or cross-validation would provide a more reliable assessment.
 
-Consequently, they may overestimate performance on new observations.
+Functional Forms of Other Covariates
 
-Small differences between the C-indices should not be interpreted as conclusive evidence of superior predictive performance.
+The functional form investigation focuses primarily on pnodes.
 
-Bootstrap validation or cross-validation would provide a more informative assessment of model discrimination and optimism.
-
-Functional Form of Other Covariates
-
-The functional form assessment focuses primarily on the number of involved lymph nodes.
-
-Further checks within the multivariable model are needed to evaluate whether alternative functional forms for age and tumor size would improve the model specification.
+Although selected transformations are used for other continuous covariates, additional systematic checks within the multivariable model could assess whether alternative specifications for age and tumor size improve model adequacy.
 
 Confidence Intervals for Hazard Ratio Curves
 
 The confidence intervals displayed for hazard ratio curves are pointwise rather than simultaneous.
 
-They quantify uncertainty at individual values of the covariate and should not be interpreted as providing a specified coverage probability for the entire curve.
+They quantify uncertainty at individual covariate values and do not provide a specified coverage probability for the entire estimated curve.
 
 Influential Observations
 
-The sensitivity analysis provides information about the stability of the results when influential observations are temporarily excluded.
+The sensitivity analysis examines the effect of temporarily excluding the five observations with the largest values of the chosen influence measure.
 
-However, influential observations are not necessarily erroneous. Their exclusion should not be justified solely by their influence on model estimates.
+This is one exploratory diagnostic, not a universal procedure for identifying invalid observations. Influential cases may be legitimate patients whose characteristics are uncommon.
 
-The primary analysis therefore retains the original observations.
+The original data are therefore retained in the primary analysis.
 
-Observational Nature of the Data
+Observational Data
 
-The dataset is observational, and the estimated associations do not establish causal relationships.
+The dataset is observational. The estimated associations do not establish causal relationships.
 
-Potential confounding, model misspecification, and the limitations of the available variables should be considered when interpreting the findings.
+Potential confounding, model misspecification, and limitations of the available variables should be considered when interpreting the findings.
+
+Figures
+
+The repository’s figures/ directory contains the graphical outputs associated with the analysis.
+
+These figures support the exploration of survival patterns, comparisons between candidate models, hazard ratio estimation, and model diagnostics.
+
+See the figures/ directory for the available plots.
 
 Tools and Technologies
 
@@ -252,14 +277,14 @@ How to Run
 To reproduce the analysis:
 
 1. Install R.
-2. Install the required packages if they are not already available.
-3. Download or clone this repository.
-4. Open analysis.R in RStudio or another R-compatible environment.
+2. Clone or download this repository.
+3. Open analysis.R in RStudio or another R-compatible environment.
+4. Install any required packages that are not already available.
 5. Run the script from beginning to end.
 
-The dataset is loaded from the TH.data package, so a separate local copy of the dataset is not required.
+The dataset is loaded from the TH.data package, so a separate local copy is not required.
 
-The script contains comments describing the main analytical steps and model comparisons.
+The script contains comments in Italian describing the main analytical steps, model comparisons, and interpretation of results.
 
 Project Structure
 
@@ -267,18 +292,20 @@ The repository is organized as follows:
 
 GBSG2-Survival-Analysis/
 ├── README.md
-└── analysis.R
-
-Additional folders, such as figures/, may be added to store exported plots and other project outputs.
+├── analysis.R
+└── figures/
+    └── Graphical outputs from the analysis
 
 Conclusion
 
-This project demonstrates the application of survival analysis techniques to a public clinical dataset using R.
+This project demonstrates the application of survival analysis techniques to a clinical dataset using R.
 
-By combining Kaplan–Meier estimation, Cox proportional hazards regression, alternative functional forms, model diagnostics, and sensitivity analysis, the study investigates the relationship between clinical characteristics and survival.
+By combining Kaplan–Meier estimation, Cox proportional hazards regression, alternative functional forms, model diagnostics, and sensitivity analysis, the project investigates the association between patient characteristics and the hazard of the event.
 
-The analysis highlights the prognostic relevance of the number of involved lymph nodes and illustrates the importance of evaluating functional form assumptions and model stability.
+The number of positive lymph nodes emerges as an important prognostic variable in the analysis. The comparison of linear, logarithmic, and spline specifications also illustrates how model specification can influence the interpretation of this association.
 
-Further work should focus on assessing sensitivity to spline specifications, evaluating the functional forms of additional covariates in the multivariable model, and validating predictive performance using bootstrap or cross-validation.
+The results highlight the importance of distinguishing model fit from predictive performance and of evaluating assumptions, influential observations, and uncertainty before drawing conclusions.
 
-The project provides a foundation for further development in statistical modeling, survival analysis, and reproducible data analysis.
+Further work should assess sensitivity to alternative spline specifications, investigate the functional forms of additional covariates, and validate predictive performance using bootstrap methods or cross-validation.
+
+Overall, the project provides a foundation for further work in survival analysis, statistical modeling, and reproducible data analysis.
